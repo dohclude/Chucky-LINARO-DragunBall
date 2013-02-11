@@ -365,7 +365,7 @@ static int magicmouse_raw_event(struct hid_device *hdev,
 	return 1;
 }
 
-static int magicmouse_setup_input(struct hid_device *hdev, struct hid_input *hi)
+static void magicmouse_setup_input(struct input_dev *input, struct hid_device *hdev)
 {
 	struct input_dev *input = hi->input;
 
@@ -481,6 +481,12 @@ static int magicmouse_probe(struct hid_device *hdev,
 		hid_err(hdev, "magicmouse hw start failed\n");
 		goto err_free;
 	}
+
+	/* We do this after hid-input is done parsing reports so that
+	 * hid-input uses the most natural button and axis IDs.
+	 */
+	if (msc->input)
+		magicmouse_setup_input(msc->input, hdev);
 
 	if (id->product == USB_DEVICE_ID_APPLE_MAGICMOUSE)
 		report = hid_register_report(hdev, HID_INPUT_REPORT,
