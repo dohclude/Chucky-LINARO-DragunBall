@@ -661,8 +661,11 @@ static int nilfs_ioctl_clean_segments(struct inode *inode, struct file *filp,
 	if (ret < 0)
 		printk(KERN_ERR "NILFS: GC failed during preparation: "
 			"cannot read source blocks: err=%d\n", ret);
-	else
+	else {
+		if (nilfs_sb_need_update(nilfs))
+			set_nilfs_discontinued(nilfs);
 		ret = nilfs_clean_segments(inode->i_sb, argv, kbufs);
+	}
 
 	nilfs_remove_all_gcinodes(nilfs);
 	clear_nilfs_gc_running(nilfs);
@@ -841,19 +844,6 @@ long nilfs_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	case FS_IOC32_GETVERSION:
 		cmd = FS_IOC_GETVERSION;
-		break;
-	case NILFS_IOCTL_CHANGE_CPMODE:
-	case NILFS_IOCTL_DELETE_CHECKPOINT:
-	case NILFS_IOCTL_GET_CPINFO:
-	case NILFS_IOCTL_GET_CPSTAT:
-	case NILFS_IOCTL_GET_SUINFO:
-	case NILFS_IOCTL_GET_SUSTAT:
-	case NILFS_IOCTL_GET_VINFO:
-	case NILFS_IOCTL_GET_BDESCS:
-	case NILFS_IOCTL_CLEAN_SEGMENTS:
-	case NILFS_IOCTL_SYNC:
-	case NILFS_IOCTL_RESIZE:
-	case NILFS_IOCTL_SET_ALLOC_RANGE:
 		break;
 	case NILFS_IOCTL_CHANGE_CPMODE:
 	case NILFS_IOCTL_DELETE_CHECKPOINT:
