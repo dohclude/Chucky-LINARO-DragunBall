@@ -233,9 +233,7 @@ static inline struct rt6_info *ip6_dst_alloc(struct dst_ops *ops,
 {
 	struct rt6_info *rt = dst_alloc(ops, dev, 0, 0, flags);
 
-	if (rt != NULL)
-		memset(&rt->rt6i_table, 0,
-			sizeof(*rt) - sizeof(struct dst_entry));
+	memset(&rt->rt6i_table, 0, sizeof(*rt) - sizeof(struct dst_entry));
 
 	return rt;
 }
@@ -804,7 +802,8 @@ restart:
 	dst_hold(&rt->dst);
 	read_unlock_bh(&table->tb6_lock);
 
-	if (!dst_get_neighbour_raw(&rt->dst) && !(rt->rt6i_flags & RTF_NONEXTHOP))
+	if (!dst_get_neighbour_raw(&rt->dst) &&
+	    !(rt->rt6i_flags & (RTF_NONEXTHOP | RTF_LOCAL)))
 		nrt = rt6_alloc_cow(rt, &fl6->daddr, &fl6->saddr);
 	else if (!(rt->dst.flags & DST_HOST))
 		nrt = rt6_alloc_clone(rt, &fl6->daddr);
@@ -1376,11 +1375,6 @@ install_route:
 			}
 		}
 	}
-
-#ifdef CONFIG_HTC_NETWORK_MODIFY
-	if (IS_ERR(dev) || (!dev))
-		printk(KERN_ERR "[NET] dev is NULL in %s!\n", __func__);
-#endif
 
 	rt->dst.dev = dev;
 	rt->rt6i_idev = idev;
